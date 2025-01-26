@@ -18,21 +18,29 @@ export default async function handler(
   const promisePool = pool.promise();
 
   try {
-    const row = await promisePool.query('SELECT * FROM admin WHERE email = ?', [email]) as RowDataPacket[];
-    
-    const match = compareSync(oldPass, row[0][0].password);
+    const connection = await promisePool.getConnection();
 
-    if(!match) throw "The old password you entered is incorrect.";
-
-    if(!(newPass === confirm)) throw "Password Not Match";
-
-    const createNewPass = hashSync(newPass, 15);
-
-    await promisePool.query("UPDATE admin SET password = ? WHERE email = ?", [createNewPass, email])
-
-    res.status(200).json({ status: "success"})
+    try {
+      const row = await connection.query('SELECT * FROM admin WHERE email = ?', [email]) as RowDataPacket[];
+      
+      const match = compareSync(oldPass, row[0][0].password);
+  
+      if(!match) throw "The old password you entered is incorrect.";
+  
+      if(!(newPass === confirm)) throw "Password Not Match";
+  
+      const createNewPass = hashSync(newPass, 15);
+  
+      await connection.query("UPDATE admin SET password = ? WHERE email = ?", [createNewPass, email])
+  
+      res.status(200).json({ status: "success"})
+    } catch(err) {
+      res.status(200).json({ status: "error", error: err})
+    } finally {
+      connection.release();
+    }
   } catch (err) {
     console.log(err)
-    res.status(200).json({ status: "error", error: err})
+    res.status(500).json({ status: "error", error: "Database connection error: " + err });
   }
 }

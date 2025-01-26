@@ -8,7 +8,21 @@ export default async function handler(
 ) {
 
   const promisePool = pool.promise();
-  const total = (await promisePool.query("SELECT COUNT(*) AS total FROM destinations") as RowDataPacket[0])[0][0].total;
 
-  res.status(200).json({total});
+  try {
+    const connection = await promisePool.getConnection();
+
+    try {
+      const total = (await connection.query("SELECT COUNT(*) AS total FROM destinations") as RowDataPacket[0])[0][0].total;
+      res.status(200).json({total});
+    } catch(err) {
+      res.status(500).json({ status: "error", error: err });
+    } finally {
+      connection.release()
+    }
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ status: "error", error: "Database connection error: " + err });
+  }
+  
 }

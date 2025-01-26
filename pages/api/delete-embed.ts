@@ -1,6 +1,6 @@
 import pool from '@/app/api/mysql/connectionPool';
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { RowDataPacket } from 'mysql2';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,18 +8,19 @@ export default async function handler(
 ) {
     if(!(req.method === "POST")) return res.status(405).end(`Method ${req.method} Not Allowed`);
 
-    const body = JSON.parse(req.body);
-
-    const placeUID = body.placeUID;
+    const {id} = req.body.data
 
     const promisePool = pool.promise();
     try {
-        const connection = await promisePool.getConnection();
 
+        const connection = await promisePool.getConnection();
+        
         try {
-            const result = (await connection.query("SELECT pictureUID AS src FROM destinationimages WHERE destinationUID = ?", [placeUID]) as RowDataPacket[0])[0];
-            
-            res.status(200).json({ result });
+            const result = (await connection.query("DELETE FROM youtube_embed WHERE id = ?", [id]) as ResultSetHeader[])[0];
+    
+            if(!result.affectedRows) throw Error("No data inserted")
+        
+            res.status(200).json({ success: true });
         } catch (err) {
             res.status(500).json({ status: "error", error: err });
         }

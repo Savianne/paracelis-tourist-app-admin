@@ -17,6 +17,7 @@ const AddDestinationFormFC: React.FC<IStyledFC> = ({className}) => {
     const [error, setError] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(false);
     const [formFilled, setFormFilled] = React.useState(false);
+
     const handleLocationSelect = (coords: { lat: number; lng: number }) => {
       setLocation(coords);
     };

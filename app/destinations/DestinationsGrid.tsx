@@ -5,6 +5,8 @@ import { RESOURCES_SERVER_URL } from '@/app/resources-server-url';
 import styled from "styled-components"
 import Loading from "../components/Loading";
 import { useRouter } from "next/navigation";
+import NoRecordFound from "../components/NoRecordFound";
+import Button from "../components/Button";
 
 type TDestinationCardData = {
     title: string,
@@ -57,7 +59,7 @@ const DestinationCard = styled(DestinationCardFC)`
         background-position: center;
         background-repeat: no-repeat;
         background-size: cover;
-        mix-blend-mode: darken;
+        /* mix-blend-mode: darken; */
     }
 
     && > .cover-photo:hover {
@@ -109,6 +111,7 @@ const ReactionCount = styled(ReactionCountFC)`
 `;
 
 const DestinationGridFC: React.FC<{className?: string}> = ({className}) => {
+    const router = useRouter();
     const [totalList, setTotalList] = React.useState(0);
     const [loadedData, setLoadedData] = React.useState<TDestinationCardData[]>([]);
     const [isLoading, seIsLoading] = React.useState(true);
@@ -130,31 +133,36 @@ const DestinationGridFC: React.FC<{className?: string}> = ({className}) => {
         })
     }, [])
     return(
-        <div className={className}>
+        <>
             {
-                loadedData.map((destinationData, index) => {
-                    return <DestinationCard key={destinationData.destinationUID} destinationData={destinationData} />
-                })
+                (!isLoading) && loadedData.length == 0? <NoRecordFound actionBtn={<Button onClick={() => router.replace("/add-destination")}>Add Place</Button>} /> : ""
             }
-
-            {
-                !(loadedData.length === totalList)?
-                <div className="load-more" onClick={() => {
-                    seIsLoading(true)
-                    axios.post("/api/get-destinations", {start: loadedData.length, end: 5})
-                    .then(res => {
-                        setLoadedData([...loadedData, ...res.data.data])
+            <div className={className}>
+                {
+                    loadedData.map((destinationData, index) => {
+                        return <DestinationCard key={destinationData.destinationUID} destinationData={destinationData} />
                     })
-                    .finally(() => seIsLoading(false))
-                }}>
-                    <div className="btn">Load more</div>
-                </div> : ""
-            }
+                }
 
-            {
-                isLoading? <Loading /> : ""
-            }
-        </div>
+                {
+                    !(loadedData.length === totalList)?
+                    <div className="load-more" onClick={() => {
+                        seIsLoading(true)
+                        axios.post("/api/get-destinations", {start: loadedData.length, end: 5})
+                        .then(res => {
+                            setLoadedData([...loadedData, ...res.data.data])
+                        })
+                        .finally(() => seIsLoading(false))
+                    }}>
+                        <div className="btn">Load more</div>
+                    </div> : ""
+                }
+
+                {
+                    isLoading? <Loading /> : ""
+                }
+            </div>
+        </>
     )
 }
 

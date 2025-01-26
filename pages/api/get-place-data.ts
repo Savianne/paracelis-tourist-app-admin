@@ -13,33 +13,33 @@ export default async function handler(
     const uid = body.uid;
    
     const promisePool = pool.promise();
-    promisePool.getConnection()
-    .then(connection => {
-        connection.beginTransaction()
-        .then(async ()=> {
+    
+    try {
+        const connection = await promisePool.getConnection();
 
+        try {
+            connection.beginTransaction();
             //get place info from destinations table
-            const destinationData = (await promisePool.query('SELECT * FROM destinations WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0];
+            const destinationData = (await connection.query('SELECT * FROM destinations WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0];
 
             if(!destinationData) throw Error("Invalid UID");
 
             //get total likes of the place
-            const totalHearts = (await promisePool.query('SELECT COUNT(*) AS total_hearts FROM heartreact WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0].total_hearts
+            const totalHearts = (await connection.query('SELECT COUNT(*) AS total_hearts FROM heartreact WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0].total_hearts
 
             //get total likes of the place
-            const totalLikes = (await promisePool.query('SELECT COUNT(*) AS total_likes FROM likes WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0].total_likes
+            const totalLikes = (await connection.query('SELECT COUNT(*) AS total_likes FROM likes WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0].total_likes
 
             //get total comments of the place
-            const totalComments = (await promisePool.query('SELECT COUNT(*) AS total_comments FROM userscomments WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0].total_comments
+            const totalComments = (await connection.query('SELECT COUNT(*) AS total_comments FROM userscomments WHERE destinationUID = ?', [uid]) as RowDataPacket[])[0][0].total_comments
 
             //get cover photo
-            const cover_photo = (await promisePool.query("SELECT cover_photo FROM detinations_cover_photo WHERE destinationUID = ?", [uid]) as RowDataPacket[])[0][0].cover_photo
-            
+            const cover_photo = (await connection.query("SELECT cover_photo FROM detinations_cover_photo WHERE destinationUID = ?", [uid]) as RowDataPacket[])[0][0].cover_photo
+
             //get location
-            const location = (await promisePool.query("SELECT * FROM geography WHERE destinationUID = ?", [uid]) as RowDataPacket[])[0][0];
+            const location = (await connection.query("SELECT * FROM geography WHERE destinationUID = ?", [uid]) as RowDataPacket[])[0][0];
             //Commit 
-            connection.commit();
-            connection.release();
+            await connection.commit();
 
             res.status(200).json({ status: "success", data: {
                 ...destinationData,
@@ -49,15 +49,15 @@ export default async function handler(
                 totalComments,
                 coverPhoto: cover_photo
             }})
-        })
-        .catch((beginTransactionError) => {
-            connection.rollback();
-            connection.release();
+        } catch (err) {
+            await connection.rollback();
             res.status(500).json({ status: "error"})
-            throw beginTransactionError;
-        });
-    })
-    .catch(err => {
-        res.status(500).json({ status: "error", error: err})
-    })
+        }
+        finally {
+            connection.release();
+        }
+    }
+    catch (err) {
+        res.status(500).json({ status: "error", error: "Database connection error: " + err });
+    }
 }

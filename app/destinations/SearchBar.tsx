@@ -118,7 +118,8 @@ const SearchBar = styled(SearchBarFC)`
         
         > .search-btn {
             display: flex;
-            padding: 10px 15px;
+            padding: 0 15px;
+            height: 100%;
             width: 120px;
             align-items: center;
             justify-content: center;
