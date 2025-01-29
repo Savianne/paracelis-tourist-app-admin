@@ -14,13 +14,36 @@ const SearchBarFC: React.FC<{className?: string}> = ({className}) => {
     const [isLoading, setIsLoading] = React.useState(false);
 
 
+    async function search() {
+        if(searchTerm.length) {
+            setIsLoading(true)
+            setShowResult(true);
+            try {
+                const res = await  axios.post("/api/search-place", {searchTerm});
+                console.log(res.data)
+                setResult(res.data.result)
+            }
+            catch(err) {
+                console.log(err)
+            }
+            finally {
+                setIsLoading(false)
+            }
+        }
+    }
     return(
         <div className={className}>
-            <div className="search-bar">
+            <form className="search-bar" onSubmit={(e) => {
+                e.preventDefault();
+                search();
+               
+            }}>
                 <input value={searchTerm} onChange={(e) => {
                     setShowResult(false)
                     setSearchTerm(e.currentTarget.value)
-                }} placeholder="Type to search" />
+                }} placeholder="Type to search" 
+                onBlur={search}
+                />
                 {
                     searchTerm.length? 
                     <span className="clear" onClick={() => {
@@ -31,7 +54,7 @@ const SearchBarFC: React.FC<{className?: string}> = ({className}) => {
                     </span> : ''
                 }
                 
-                <span className="search-btn" onClick={async () => {
+                {/* <span className="search-btn" onClick={async () => {
                     if(searchTerm.length) {
                         setIsLoading(true)
                         setShowResult(true);
@@ -48,8 +71,8 @@ const SearchBarFC: React.FC<{className?: string}> = ({className}) => {
                         }
                     }
                     
-                }}>Search</span>
-            </div>
+                }}>Search</span> */}
+            </form>
             {
                 showResult? 
                 <div className="search-result">

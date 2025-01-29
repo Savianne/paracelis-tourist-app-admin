@@ -1,1 +1,1 @@
-export const RESOURCES_SERVER_URL = "http://localhost:3001";
+export const RESOURCES_SERVER_URL = "http://88.222.244.153:3001";

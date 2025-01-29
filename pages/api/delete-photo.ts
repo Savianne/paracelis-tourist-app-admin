@@ -35,6 +35,7 @@ export default async function handler(
             res.status(200).json({ status: "success", UID });
 
         } catch (err) {
+            console.log(err)
             // If an error occurs, rollback the transaction
             await connection.rollback();
             res.status(500).json({ status: "error", error: err });
@@ -44,6 +45,7 @@ export default async function handler(
         }
 
     } catch (err) {
+        console.log(err)
         res.status(500).json({ status: "error", error: "Database connection error: " + err });
     }
 }

@@ -39,7 +39,7 @@ const DestinationCardFC: React.FC<{className?: string, destinationData: TDestina
 const DestinationCard = styled(DestinationCardFC)`
     position: relative;
     display: flex;
-    flex: 0 1 350px;
+    flex: 0 1 250px;
     height: 400px;
     padding: 20px;
     border-radius: 10px;

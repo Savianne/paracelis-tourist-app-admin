@@ -19,6 +19,7 @@ const PlaceGalleryFC:React.FC<IGallery> = ({className, src, onDeletedPhoto, plac
     const [onFullScreenImage, setOnFullScreenImage] = React.useState<{img: HTMLImageElement, uid: string} | null>(null);
     const [showFullScreen, setShowFullScreen] = React.useState(false);
     const [onDelete, setOnDelete] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(false);
 
     React.useEffect(() => {
         const loadedImages: ({img: HTMLImageElement, uid: string})[] = [];
@@ -62,6 +63,7 @@ const PlaceGalleryFC:React.FC<IGallery> = ({className, src, onDeletedPhoto, plac
                 <FullScreenView src={onFullScreenImage.img.src} 
                 onExitFullScreen={() => setShowFullScreen(false)} 
                 onDelete={async () =>{
+                    setIsLoading(true)
                     try{
                         await axios.delete("/api/delete-photo", {data: {imageURL: onFullScreenImage.uid}});
                         setOnFullScreenImage(null);
@@ -70,20 +72,28 @@ const PlaceGalleryFC:React.FC<IGallery> = ({className, src, onDeletedPhoto, plac
                     } catch(err) {
                         console.log(err)
                     }
+                    finally {
+                        setIsLoading(false)
+                    }
                 }}
                 onChangeDp={async () => {
+                    setIsLoading(true);
                     try{
                         await axios.post("/api/set-display-picture", {data: {image: onFullScreenImage.uid, uid: placeUID}});
                         setOnFullScreenImage(null);
                         setShowFullScreen(false);
                         onChangedDp(onFullScreenImage.uid);
                     } catch(err) {
+                        alert("Error!")
                         console.log(err)
+                    }
+                    finally {
+                        setIsLoading(false);
                     }
                 }}/> : ""
             }
             {
-                onDelete? <Loading /> : ""
+                onDelete || isLoading? <Loading /> : ""
             }
         </div>
     )

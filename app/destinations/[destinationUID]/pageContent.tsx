@@ -34,7 +34,8 @@ interface IPageContent extends IStyledFC {
 }
 
 const PageContentFC: React.FC<IPageContent> = ({className, uid}) => {
-    const router = useRouter()
+    const router = useRouter();
+    const bannerRef =  React.useRef<null | HTMLDivElement>(null)
     const [isLoading, setIsLoading] = React.useState(true);
     const [isLoadingImages, setIsLoadingImages] = React.useState(true);
     const [dp, setDp] = React.useState("");
@@ -99,13 +100,35 @@ const PageContentFC: React.FC<IPageContent> = ({className, uid}) => {
             setDp(data?.coverPhoto as string);
             setEditFormData({title: data.title, story: data.description, geolocation: null});
         }
-    }, [data])
+    }, [data]);
+
+    React.useEffect(() => {
+        const element = bannerRef.current;
+        let position = 0;
+
+        function animateBackground() {
+            position += 1; // Adjust the step size for speed
+            if(element) {
+                const randomX = Math.floor(Math.random() * 100); // Random percentage for X-axis (0% to 100%)
+                const randomY = Math.floor(Math.random() * 100); // Random percentage for Y-axis (0% to 100%)
+                
+                element.style.backgroundPosition = `${randomX}% ${randomY}%`;
+
+                // Call the function again after a short delay
+                setTimeout(animateBackground, 10000); // Adjust 500ms for speed
+
+            }
+        }
+
+        animateBackground();
+    })
 
     return(
         <div className={className}>
             {
                 data? <>
-                    <Banner dp={dp}>
+                    <Banner dp={dp} ref={bannerRef}>
+                        <div className="cover"></div>
                         <div className="actions-btn-group">
                             <span className="action-btn delete" 
                             onClick={() => setConfirmDeleteModal(true)}>
@@ -114,9 +137,6 @@ const PageContentFC: React.FC<IPageContent> = ({className, uid}) => {
                             <span className="action-btn edit" onClick={() => editFormData? setEditPlaceInfoModal(true) : alert("Loading data..")}>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160L0 416c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-96c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 64z"/></svg>
                             </span>
-                        </div>
-                        <div className="dp-container">
-                            <div className="dp"></div>
                         </div>
                         <div className="info-area">
                             <h1>{data.title}</h1>
@@ -402,11 +422,35 @@ const PageContentFC: React.FC<IPageContent> = ({className, uid}) => {
 }
 
 const Banner = styled.div<{dp: string}>`
+    position: relative;
     display: flex;
     flex: 0 1 100%;
-    padding: 50px;
+    padding: 100px 50px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    /* background-color: #e1e1e1; */
+    background-image: url('${RESOURCES_SERVER_URL}/images/gallery/${(p) => p.dp}');
+    // background-attachment: fixed;
+    background-position: 50% 50%;
+    // background-position: center;
+    background-repeat: no-repeat;
+    // background-size: cover;
+    background-size: 150%;
+    color: white;
+    background-color:rgb(0, 0, 0);
+    transition: background-position 10s ease-in-out;
+
+    && > .cover {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        background-color: #101010ba;
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 0;
+    }
 
     && > .actions-btn-group {
         position: absolute;
@@ -440,44 +484,12 @@ const Banner = styled.div<{dp: string}>`
             background-color: #f53729;
         }
     }
-    && > .dp-container {
-        display: flex;
-        flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
-        width: 250px;
-        height: 250px;
-        border-radius: 10px;
-        overflow: hidden;
-        background-color: #82a0ce;
-    }
-
-    && > .dp-container > .dp {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        border-radius: 10px;
-        background-image: url('${RESOURCES_SERVER_URL}/images/gallery/${(p) => p.dp}');
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-        font-size: 30px;
-        color: white;
-        /* mix-blend-mode: darken; */
-    }
-
-    && > .dp-container > .dp:hover {
-        transform: scale(1.2); 
-        transition: all 1s;   
-    }
-
+    
     && > .info-area {
         display: flex;
         flex: 0 1 100%;
-        margin-left: 30px;
         flex-wrap: wrap;
+        z-index: 10;
         
         > h1 {
             flex: 0 1 100%;
@@ -490,6 +502,7 @@ const Banner = styled.div<{dp: string}>`
             flex: 0 1 100%;
             margin-top: 30px;
             gap: 10px;
+            flex-wrap: wrap;
             cursor: pointer;
 
             > .reaction {

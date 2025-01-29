@@ -21,7 +21,7 @@ const Loading = styled(LoadingFC)`
         width: 100%;
         height: 100vh;
         background-color: #0f0e15b3;
-        z-index: 100;
+        z-index: 10000;
     }
 
     && > .loader {
